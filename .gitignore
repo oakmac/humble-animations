@@ -1,0 +1,6 @@
+.cpcache/
+target/
+.nrepl-port
+.rebel_readline_history
+hs_err_pid*.log
+*.diff
