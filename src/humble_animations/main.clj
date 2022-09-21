@@ -35,25 +35,6 @@
 (defn Box [color]
   (ui/rect (paint/fill color) (ui/label "")))
 
-(def default-rectangle-opts
-  {:bg-color red
-   :height-px 150
-   :width-px 300})
-
-(defn Rectangle2
-  ([]
-   (Rectangle2 default-rectangle-opts))
-  ([{:keys [bg-color height-px width-px] :as _opts}]
-   (ui/rect
-    (paint/fill bg-color)
-    (ui/gap 0 0))))
-
-(def start
-  {:x 0})
-
-(def end
-  {:x 100})
-
 (def initial-app-state
   {:red-box-height 50
    :red-box-width 50
