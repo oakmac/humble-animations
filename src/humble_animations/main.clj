@@ -82,21 +82,27 @@
    :bottom-left  {:left 0   :top 1}
    :bottom-right {:left 1   :top 1}})
 
+(def red-box-animate-speed-ms 200)
+
 (defn go-to-location!
   ([]
    (go-to-location! 0 0))
-  ([new-left-pct top]
+  ([new-left-pct new-top-pct]
    (let [{:keys [red-box-left-pct red-box-top-pct]} @*app-state]
      (animate/start-animation!
        {:start-val red-box-left-pct
         :end-val new-left-pct
-        :duration-ms 500
+        :duration-ms red-box-animate-speed-ms
         :on-tick (fn [{:keys [val]}]
                    (swap! *app-state assoc :red-box-left-pct val))
-                                           ; :red-box-top-pct val))
-        :transition :ease-out-sine
-        :on-stop (fn [animation]
-                   (println "animation stopped:" animation))}))))
+        :transition :ease-out-sine})
+     (animate/start-animation!
+       {:start-val red-box-top-pct
+        :end-val new-top-pct
+        :duration-ms red-box-animate-speed-ms
+        :on-tick (fn [{:keys [val]}]
+                   (swap! *app-state assoc :red-box-top-pct val))
+        :transition :ease-out-sine}))))
 
 (def ButtonsColumn
   (ui/padding layout-padding-px

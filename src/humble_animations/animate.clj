@@ -135,8 +135,6 @@
     ;; add this animation to the queue
     (swap! animations-queue assoc id animation')
 
-    (println "start-animation:" animation')
-
     ;; start the tick! function if it is not running already
     (when-not @animating?
       (future (tick!)))
