@@ -22,11 +22,6 @@
 (def outside-padding 15)
 (def inner-padding 10)
 
-; (defn now
-;   "returns the current time in milliseconds"
-;   []
-;   (System/currentTimeMillis))
-
 (defonce *window
   (atom nil))
 
@@ -95,14 +90,14 @@
         :duration-ms red-box-animate-speed-ms
         :on-tick (fn [{:keys [val]}]
                    (swap! *app-state assoc :red-box-left-pct val))
-        :transition :ease-out-sine})
+        :transition :ease-out-pow})
      (animate/start-animation!
        {:start-val red-box-top-pct
         :end-val new-top-pct
         :duration-ms red-box-animate-speed-ms
         :on-tick (fn [{:keys [val]}]
                    (swap! *app-state assoc :red-box-top-pct val))
-        :transition :ease-out-sine}))))
+        :transition :ease-out-pow}))))
 
 (def ButtonsColumn
   (ui/padding layout-padding-px
@@ -145,8 +140,7 @@
                         box-top (:red-box-top-pct @*app-state)]
         (ui/halign box-left
           (ui/valign box-top
-            (ui/stack
-              RedBox)))))))
+            RedBox))))))
 
    ; (ui/center BlueBoxContainer))))))
 

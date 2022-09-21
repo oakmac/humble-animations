@@ -42,9 +42,7 @@
         transition-fn (cond
                         shorthand-fn shorthand-fn
                         (fn? transition) transition
-                        :else (do
-                                ;; TODO: warning here
-                                default-transition-fn))
+                        :else default-transition-fn)
         ;; a p-val is a number between 0 and 1, used for the transition functions
         p-val (tween/range-to-p start-time end-time current-time)
         tween-val (tween/p-to-range start-val' end-val' (transition-fn p-val))]
@@ -65,12 +63,9 @@
 (def animations-queue
   (atom {}))
 
-;; TODO:
-;; - assert(duration-ms >= 10)
-
 (defn tick!
   "When an animation is active this function runs every ~16ms, for 60fps
-  NOTE: this is a somewhat recursive function that calls itself via a future"
+  NOTE: this is a somewhat recursive function that calls itself after sleeping"
   []
   (let [queue @animations-queue
         n (now)
@@ -83,14 +78,15 @@
             ascending? (< start-val end-val)
             time-to-stop? (or
                             ;; we have reached their end-val
-                            ; (if ascending?
-                            ;   (>= tween-val end-val)
-                            ;   (<= tween-val end-val))
+                            (if ascending?
+                              (>= tween-val end-val)
+                              (<= tween-val end-val))
                             ;; it is past time
                             (> n end-time))]
         ;; run their provided on-tick function with the val
-        (when (fn? on-tick) (on-tick {:time n
-                                      :val tween-val}))
+        (when (fn? on-tick)
+          (on-tick {:time n
+                    :val tween-val}))
         ;; is it time to stop this animation?
         (when time-to-stop?
           (swap! stops conj animation))))
@@ -121,9 +117,7 @@
 ;; TODO: make this vardiadic, accept multiple animations
 (defn start-animation!
   [{:keys [start-val end-val duration-ms on-tick transition] :as animation}]
-
   (assert (fn? @*redraw-fn) "Please set the *redraw-fn before calling start-animation!")
-
   (let [start-time (now)
         end-time (+ start-time duration-ms)
         id (str (random-uuid))
