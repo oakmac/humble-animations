@@ -15,7 +15,7 @@ TODO: create a .gif and add it here
 ./script/run.sh
 
 ## Run a REPL
-clj -M:repl/rebel
+clj -M:env/dev:repl/rebel
 ```
 
 ## License

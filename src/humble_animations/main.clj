@@ -1,12 +1,11 @@
 (ns humble-animations.main
   (:require
+    [humble-animations.animate :as animate]
     [io.github.humbleui.debug :as debug]
     [io.github.humbleui.paint :as paint]
     [io.github.humbleui.ui :as ui]
     [io.github.humbleui.ui.clickable :as clickable]
-    [io.github.humbleui.window :as window]
-
-    [tween-clj.core :as tween]))
+    [io.github.humbleui.window :as window]))
 
 (set! *warn-on-reflection* true)
 
@@ -23,10 +22,10 @@
 (def outside-padding 15)
 (def inner-padding 10)
 
-(defn now
-  "returns the current time in milliseconds"
-  []
-  (System/currentTimeMillis))
+; (defn now
+;   "returns the current time in milliseconds"
+;   []
+;   (System/currentTimeMillis))
 
 (defonce *window
   (atom nil))
@@ -35,11 +34,11 @@
   ; (println "redraw!")
   (some-> @*window window/request-frame))
 
+(animate/set-redraw-fn! redraw)
+
 ;; TODO: is there an empty component I can use instead of label = "" ?
 (defn Box [color]
   (ui/rect (paint/fill color) (ui/label "")))
-
-
 
 (def default-rectangle-opts
   {:bg-color red
@@ -61,7 +60,11 @@
   {:x 100})
 
 (def initial-app-state
-  {:x 100})
+  {:red-box-height 50
+   :red-box-width 50
+
+   :red-box-left-pct 0
+   :red-box-top-pct 0})
 
 (def *app-state
   (atom initial-app-state))
@@ -70,149 +73,84 @@
   (reset! *app-state initial-app-state)
   (redraw))
 
-(def transitions
-  {:ease-in (partial tween/ease-in tween/transition-linear)
-   :ease-out (partial tween/ease-out tween/transition-linear)
-   :ease-in-out (partial tween/ease-in-out tween/transition-linear)
+(def layout-padding-px 10)
 
-   :ease-in-circ (partial tween/ease-in tween/transition-circ)
-   :ease-out-circ (partial tween/ease-out tween/transition-circ)
-   :ease-in-out-circ (partial tween/ease-in-out tween/transition-circ)
+(def locations
+  {:top-left     {:left 0   :top 0}
+   :top-right    {:left 1   :top 0}
+   :center       {:left 0.5 :top 0.5}
+   :bottom-left  {:left 0   :top 1}
+   :bottom-right {:left 1   :top 1}})
 
-   :ease-in-expo (partial tween/ease-in tween/transition-expo)
-   :ease-out-expo (partial tween/ease-out tween/transition-expo)
-   :ease-in-out-expo (partial tween/ease-in-out tween/transition-expo)
+(defn go-to-location!
+  ([]
+   (go-to-location! 0 0))
+  ([new-left-pct top]
+   (let [{:keys [red-box-left-pct red-box-top-pct]} @*app-state]
+     (animate/start-animation!
+       {:start-val red-box-left-pct
+        :end-val new-left-pct
+        :duration-ms 500
+        :on-tick (fn [{:keys [val]}]
+                   (swap! *app-state assoc :red-box-left-pct val))
+                                           ; :red-box-top-pct val))
+        :transition :ease-out-sine
+        :on-stop (fn [animation]
+                   (println "animation stopped:" animation))}))))
 
-   :ease-in-pow (partial tween/ease-in tween/transition-pow)
-   :ease-out-pow (partial tween/ease-out tween/transition-pow)
-   :ease-in-out-pow (partial tween/ease-in-out tween/transition-pow)
+(def ButtonsColumn
+  (ui/padding layout-padding-px
+    (ui/valign 0
+      (ui/column
+        (ui/button (fn [] nil) (ui/label "Demo 1"))
+        (ui/gap 0 10)
+        (ui/button (fn [] nil) (ui/label "Demo 2"))
+        (ui/gap 0 10)
+        (ui/button (fn [] nil) (ui/label "Demo 3"))))))
+        ; (ui/gap 0 10)))))
 
-   :ease-in-sine (partial tween/ease-in tween/transition-sine)
-   :ease-out-sine (partial tween/ease-out tween/transition-sine)
-   :ease-in-out-sine (partial tween/ease-in-out tween/transition-sine)})
+(def Separator
+  (ui/rect (paint/fill light-grey)
+    (ui/gap 2 0)))
 
-(defn calc-tween-val
-  "Calculates a tweening value for a specific time"
-  [{:keys [start-val end-val start-time end-time current-time transition]}]
-  (let [default-transition-fn (:ease-in transitions)
-        shorthand-fn (get transitions transition)
-        transition-fn (cond
-                        shorthand-fn shorthand-fn
-                        (fn? transition) transition
-                        :else (do
-                                ;; TODO: warning here
-                                default-transition-fn))
-        p-val (tween/range-to-p start-time end-time current-time)]
-    (tween/p-to-range start-val end-val (transition-fn p-val))))
+(def RedBox
+  (ui/dynamic _ctx [box-width (:red-box-width @*app-state)
+                    box-height (:red-box-height @*app-state)]
+    (ui/clip-rrect 8
+      (ui/rect (paint/fill red)
+        (ui/gap box-width box-height)))))
 
-;; roughly 60 frames per second
-(def animation-tick-rate-ms
-  16)
+; (def BlueBox
+;   (ui/dynamic _ctx [box-width (:red-box-width @*app-state)
+;                     box-height (:red-box-height @*app-state)]
+;     (ui/clip-rrect 8
+;       (ui/rect (paint/fill blue)
+;         (ui/gap box-width box-height)))))
+;
+; (def BlueBoxContainer
+;   (ui/row
+;     (ui/gap 100 0)
+;     BlueBox))
 
-(def animating? (atom false))
+(def AnimationArea
+  (ui/padding layout-padding-px
+    (ui/stack
+      (ui/dynamic _ctx [box-left (:red-box-left-pct @*app-state)
+                        box-top (:red-box-top-pct @*app-state)]
+        (ui/halign box-left
+          (ui/valign box-top
+            (ui/stack
+              RedBox)))))))
 
-(def animations-queue
-  (atom []))
-
-;; TODO:
-;; - have animations be an atom: a queue of animation objects
-;; - have the "tick" function run constantly and check the animations queue?
-;; - assert(start-val < end-val)
-;; - assert(duration-ms >= 10)
-
-(defn animation-tick!
-  [{:keys [start-val end-val start-time end-time transition on-tick] :as opts}]
-  (let [n (now)
-        current-val (calc-tween-val (assoc opts :current-time n))
-        ; _ (println current-val)
-        ascending? (>= end-val start-val)
-        ;; TODO:
-        ;; - allow them to provide a stop-fn ?
-        ;; - stop once we are past duration time?
-
-        ;; stop once the tweening value reaches end-val
-        ;; TODO: should we also stop if we are past duration?
-        time-to-stop? (if ascending?
-                        (>= current-val end-val)
-                        (<= current-val end-val))]
-
-    ;; execute their on-tick function with the current tweening value
-    (when (fn? on-tick) (on-tick {:time n
-                                  :val current-val}))
-
-    ;; perform a redraw
-    (redraw)
-
-    ;; queue up the next animation-tick unless it is time to stop
-    (when-not time-to-stop?
-      (Thread/sleep animation-tick-rate-ms)
-      (animation-tick! opts))))
-
-(def animation1
-  {:start-val 100
-   :end-val 450
-   :duration-ms 120
-   :on-tick (fn [{:keys [val]}]
-              (swap! *app-state assoc :x val))
-   :transition :ease-out-sine})
-
-(def animation2
-  {:start-val 100
-   :end-val 450
-   :duration-ms 120
-   :on-tick (fn [{:keys [val]}]
-              (swap! *app-state assoc :x (- 550 val)))
-   :transition :ease-out-sine})
-
-(defn start-animation!
-  [{:keys [start-val end-val duration-ms on-tick transition] :as opts}]
-
-  (assert (< start-val end-val) "start-val must be less end-val")
-
-  (let [start-time (now)
-        end-time (+ start-time duration-ms)]
-  ; (reset! animating? true)
-    (animation-tick! (assoc opts :start-time start-time
-                                 :end-time end-time))))
-
-(defn stop-animation! []
-  (println "Stop animation")
-  (reset! animating? false))
-
-(def AirQuotesButtons
-  (ui/column
-    [:stretch 1 (clickable/clickable
-                  {:on-click (fn [evt]
-                               (println "Click yellow"))}
-                               ; (start-animation! animation1))}
-                  (Box yellow))]
-    [:stretch 1 (clickable/clickable
-                  {:on-click (fn [evt]
-                               (println "Click blue"))}
-                               ; (start-animation! animation2))}
-                  (Box blue))]))
+   ; (ui/center BlueBoxContainer))))))
 
 (def HumbleAnimations
   "top-level component"
   (ui/default-theme {}
-    (clickable/clickable
-      {:on-click
-       (fn [evt] nil)}
-      (ui/rect (paint/fill light-grey)
-        (ui/padding outside-padding
-          ; (Box blue)
-          (ui/dynamic _ctx [x (:x @*app-state)]
-            (ui/row
-              [:stretch 1 AirQuotesButtons]
-              (ui/gap x 0)
-              [:stretch 1 (Box blue)])))))))
-
-        ; (ui/row
-        ;   [:stretch 1 (Box blue)]
-        ;   (ui/gap inner-padding 0)
-        ;   [:stretch 1 (Box yellow)]
-        ;   (ui/gap inner-padding 0)
-        ;   [:stretch 1 (Rectangle2 {:bg-color dark-grey})])))))
+    (ui/row
+      ButtonsColumn
+      Separator
+      [:stretch 1 AnimationArea])))
 
 ;; re-draw the UI when we load this namespace
 (redraw)
