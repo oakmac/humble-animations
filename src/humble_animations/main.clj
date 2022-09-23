@@ -58,7 +58,7 @@
    :bottom-left  {:left 0   :top 1}
    :bottom-right {:left 1   :top 1}})
 
-(def red-box-animate-speed-ms 200)
+(def red-box-animate-speed-ms 250)
 
 (defn go-to-location!
   ([]
@@ -84,12 +84,15 @@
   (ui/padding layout-padding-px
     (ui/valign 0
       (ui/column
-        (ui/button (fn [] nil) (ui/label "Demo 1"))
+        (ui/button #(go-to-location! 0 0) (ui/label "Top Left"))
         (ui/gap 0 10)
-        (ui/button (fn [] nil) (ui/label "Demo 2"))
+        (ui/button #(go-to-location! 1 0) (ui/label "Top Right"))
         (ui/gap 0 10)
-        (ui/button (fn [] nil) (ui/label "Demo 3"))))))
-        ; (ui/gap 0 10)))))
+        (ui/button #(go-to-location! 0.5 0.5) (ui/label "Center"))
+        (ui/gap 0 10)
+        (ui/button #(go-to-location! 0 1) (ui/label "Bottom Left"))
+        (ui/gap 0 10)
+        (ui/button #(go-to-location! 1 1) (ui/label "Bottom Right"))))))
 
 (def Separator
   (ui/rect (paint/fill light-grey)

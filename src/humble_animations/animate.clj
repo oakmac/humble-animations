@@ -51,10 +51,6 @@
       (let [delta-from-start-val (- tween-val start-val')]
         (- start-val delta-from-start-val)))))
 
-;; roughly 60 frames per second
-(def animation-tick-rate-ms
-  16)
-
 ;; FIXME: not working yet
 (def animating?
   "Are we currently animating?"
@@ -64,8 +60,7 @@
   (atom {}))
 
 (defn tick!
-  "When an animation is active this function runs every ~16ms, for 60fps
-  NOTE: this is a somewhat recursive function that calls itself after sleeping"
+  "This function is called continuously while an animation is active."
   []
   (let [queue @animations-queue
         n (now)
@@ -105,8 +100,7 @@
 
     ;; queue up the next tick! unless the queue is empty
     (when-not (empty? @animations-queue)
-      (Thread/sleep animation-tick-rate-ms)
-      (tick!))))
+      (recur))))
 
 ;; -----------------------------------------------------------------------------
 ;; Public API
