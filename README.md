@@ -6,7 +6,7 @@ This repo is an example of doing animations in [HumbleUI].
 
 ## Screenshot
 
-<img src="images/red-box-demo.gif">
+<img src="images/demo.gif">
 
 ## Development
 

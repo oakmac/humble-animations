@@ -35,8 +35,8 @@
   (ui/rect (paint/fill color) (ui/label "")))
 
 (def initial-app-state
-  {:red-box-height 50
-   :red-box-width 50
+  {:red-box-height-px 50
+   :red-box-width-px 50
 
    :red-box-left-pct 0
    :red-box-top-pct 0})
@@ -107,6 +107,18 @@
                                              :red-box-top-pct (:top val)))
           :transition :ease-out-pow})))))
 
+(defn animate-red-box-size!
+  [width-px height-px]
+  (let [{:keys [red-box-width-px red-box-height-px]} @*app-state]
+    (animate/start-animation!
+      {:start-val [red-box-width-px red-box-height-px]
+       :end-val [width-px height-px]
+       :duration-ms red-box-animate-speed-ms
+       :on-tick (fn [{:keys [_time val]}]
+                  (swap! *app-state assoc :red-box-width-px (first val)
+                                          :red-box-height-px (second val)))
+       :transition :ease-out-pow})))
+
 (def ButtonsColumn
   (ui/padding layout-padding-px
     (ui/valign 0
@@ -126,16 +138,24 @@
             (let [rand-left (/ (rand-int 101) 100)
                   rand-top (/ (rand-int 101) 100)]
               (animate-red-box-location! rand-left rand-top)))
-          (ui/label "Random!"))))))
+          (ui/label "Random!"))
+
+        (ui/gap 0 30)
+
+        (ui/button #(animate-red-box-size! 25 25) (ui/label "Small Box"))
+        (ui/gap 0 10)
+        (ui/button #(animate-red-box-size! 50 50) (ui/label "Medium Box"))
+        (ui/gap 0 10)
+        (ui/button #(animate-red-box-size! 100 100) (ui/label "Large Box"))))))
 
 (def Separator
   (ui/rect (paint/fill light-grey)
     (ui/gap 2 0)))
 
 (def RedBox
-  (ui/dynamic _ctx [box-width (:red-box-width @*app-state)
-                    box-height (:red-box-height @*app-state)]
-    (ui/clip-rrect 8
+  (ui/dynamic _ctx [box-width (:red-box-width-px @*app-state)
+                    box-height (:red-box-height-px @*app-state)]
+    (ui/clip-rrect 4
       (ui/rect (paint/fill red)
         (ui/gap box-width box-height)))))
 
