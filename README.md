@@ -4,7 +4,7 @@ This repo is an example of doing animations in [HumbleUI].
 
 [HumbleUI]:https://github.com/HumbleUI/HumbleUI
 
-## Screenshot
+## Demo
 
 > Please note the .gif image below does not show animations at their full frame-rate.
 
