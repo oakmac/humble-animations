@@ -182,8 +182,9 @@
 (redraw!)
 
 (defn -main [& args]
-  (reset! *window
-    (ui/start-app!
-      {:title    "HumbleUI Animations"
-       :bg-color 0xFFFFFFFF}
-      #'HumbleAnimations)))
+  (ui/start-app!
+    (reset! *window
+      (ui/window
+        {:title    "HumbleUI Animations"
+         :bg-color 0xFFFFFFFF}
+        #'HumbleAnimations))))
